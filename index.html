@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LynkStore Admin</title>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#f6f7f9; color:#111; }
+    .wrap { max-width:980px; margin:30px auto; padding:0 18px; }
+    .card { background:#fff; border:1px solid #e7e8ec; border-radius:20px; padding:22px; margin-bottom:18px; }
+    h1,h2 { margin:0 0 16px 0; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+    input,button { width:100%; box-sizing:border-box; padding:14px 16px; border-radius:14px; border:1px solid #d8dbe2; font-size:15px; }
+    button { cursor:pointer; font-weight:700; background:#0b0b0d; color:#fff; border:none; }
+    button.secondary { background:#fff; color:#111; border:1px solid #d8dbe2; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex:1; min-width:160px; }
+    .muted { color:#6f7682; font-size:14px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#f3f4f7; padding:14px; border-radius:14px; font-size:13px; margin:0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>LynkStore Admin</h1>
+      <div class="muted">Выдача подписок Standard и Premium</div>
+    </div>
+
+    <div class="card">
+      <h2>Настройки подключения</h2>
+      <div class="grid">
+        <input id="url" placeholder="Supabase URL" />
+        <input id="key" placeholder="Supabase Publishable Key" />
+      </div>
+      <div style="height:10px"></div>
+      <button onclick="saveConfig()">Сохранить настройки</button>
+    </div>
+
+    <div class="card">
+      <h2>Поиск пользователя</h2>
+      <div class="row">
+        <input id="login" placeholder="Логин пользователя" />
+        <button onclick="loadUser()">Найти</button>
+      </div>
+      <div style="height:14px"></div>
+      <pre id="userInfo">Пользователь не загружен</pre>
+    </div>
+
+    <div class="card">
+      <h2>Выдать подписку</h2>
+      <div class="row">
+        <button onclick="issuePlan('standard')">Standard</button>
+        <button onclick="issuePlan('premium')">Premium</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Управление устройствами</h2>
+      <div class="row">
+        <button class="secondary" onclick="resetDevices()">Сбросить машины</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Результат</h2>
+      <pre id="result">Ожидание действий</pre>
+    </div>
+  </div>
+
+  <script>
+    function qs(id) { return document.getElementById(id); }
+
+    function saveConfig() {
+      localStorage.setItem("ls_url", qs("url").value.trim());
+      localStorage.setItem("ls_key", qs("key").value.trim());
+      qs("result").textContent = "Настройки сохранены";
+    }
+
+    function loadConfig() {
+      qs("url").value = localStorage.getItem("ls_url") || "";
+      qs("key").value = localStorage.getItem("ls_key") || "";
+    }
+
+    function headers() {
+      const key = qs("key").value.trim();
+      return {
+        "apikey": key,
+        "Authorization": "Bearer " + key,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      };
+    }
+
+    function baseUrl() {
+      return qs("url").value.trim();
+    }
+
+    let currentUser = null;
+
+    async function apiGet(path, params = "") {
+      const res = await fetch(baseUrl() + path + params, {
+        method: "GET",
+        headers: headers()
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function apiPost(path, payload) {
+      const h = headers();
+      h["Prefer"] = "return=representation";
+      const res = await fetch(baseUrl() + path, {
+        method: "POST",
+        headers: h,
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function apiDelete(path, params = "") {
+      const res = await fetch(baseUrl() + path + params, {
+        method: "DELETE",
+        headers: headers()
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return true;
+    }
+
+    async function loadUser() {
+      try {
+        const login = qs("login").value.trim();
+        if (!login) throw new Error("Введите логин");
+
+        const users = await apiGet("/rest/v1/users", `?select=*&login=eq.${encodeURIComponent(login)}&limit=1`);
+        if (!users.length) {
+          currentUser = null;
+          qs("userInfo").textContent = "Пользователь не найден";
+          qs("result").textContent = "Пользователь не найден";
+          return;
+        }
+
+        currentUser = users[0];
+
+        const subs = await apiGet("/rest/v1/subscriptions", `?select=*&user_id=eq.${currentUser.id}&order=created_at.desc&limit=1`);
+        const devices = await apiGet("/rest/v1/devices", `?select=*&user_id=eq.${currentUser.id}&order=created_at.asc`);
+
+        qs("userInfo").textContent = JSON.stringify({
+          user: currentUser,
+          subscription: subs[0] || null,
+          devices: devices
+        }, null, 2);
+
+        qs("result").textContent = "Пользователь загружен";
+      } catch (e) {
+        qs("result").textContent = "Ошибка: " + e.message;
+      }
+    }
+
+    function planPayload(plan, userId) {
+      const now = new Date();
+      let expiresAt = null;
+      let maxDevices = null;
+
+      if (plan === "standard") {
+        expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        maxDevices = 3;
+      } else if (plan === "premium") {
+        expiresAt = null;
+        maxDevices = 999;
+      }
+
+      return {
+        user_id: userId,
+        plan: plan,
+        expires_at: expiresAt,
+        max_devices: maxDevices
+      };
+    }
+
+    async function issuePlan(plan) {
+      try {
+        if (!currentUser) throw new Error("Сначала загрузите пользователя");
+
+        const payload = planPayload(plan, currentUser.id);
+        const data = await apiPost("/rest/v1/subscriptions", payload);
+
+        qs("result").textContent = "Подписка выдана:\n" + JSON.stringify(data[0] || data, null, 2);
+        await loadUser();
+      } catch (e) {
+        qs("result").textContent = "Ошибка: " + e.message;
+      }
+    }
+
+    async function resetDevices() {
+      try {
+        if (!currentUser) throw new Error("Сначала загрузите пользователя");
+        await apiDelete("/rest/v1/devices", `?user_id=eq.${currentUser.id}`);
+        qs("result").textContent = "Машины пользователя сброшены";
+        await loadUser();
+      } catch (e) {
+        qs("result").textContent = "Ошибка: " + e.message;
+      }
+    }
+
+    loadConfig();
+  </script>
+</body>
+</html>
