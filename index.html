@@ -5,84 +5,549 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LynkStore Admin</title>
   <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#f6f7f9; color:#111; }
-    .wrap { max-width:980px; margin:30px auto; padding:0 18px; }
-    .card { background:#fff; border:1px solid #e7e8ec; border-radius:20px; padding:22px; margin-bottom:18px; }
-    h1,h2 { margin:0 0 16px 0; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
-    input,button { width:100%; box-sizing:border-box; padding:14px 16px; border-radius:14px; border:1px solid #d8dbe2; font-size:15px; }
-    button { cursor:pointer; font-weight:700; background:#0b0b0d; color:#fff; border:none; }
-    button.secondary { background:#fff; color:#111; border:1px solid #d8dbe2; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; }
-    .row > * { flex:1; min-width:160px; }
-    .muted { color:#6f7682; font-size:14px; }
-    pre { white-space:pre-wrap; word-break:break-word; background:#f3f4f7; padding:14px; border-radius:14px; font-size:13px; margin:0; }
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1e222c;
+      --border: #2b3140;
+      --text: #f5f7fb;
+      --muted: #98a2b3;
+      --accent: #ffffff;
+      --accent-dark: #111111;
+      --danger: #e5484d;
+      --warning: #f5a524;
+      --success: #22c55e;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.04), transparent 20%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .login-screen {
+      min-height: calc(100vh - 48px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(23, 26, 33, 0.96);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 32px;
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 34px;
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .input,
+    .select,
+    .button {
+      width: 100%;
+      border-radius: 16px;
+      font-size: 15px;
+      padding: 15px 16px;
+      border: 1px solid var(--border);
+      outline: none;
+    }
+
+    .input,
+    .select {
+      background: #11141a;
+      color: var(--text);
+    }
+
+    .input::placeholder {
+      color: #70798a;
+    }
+
+    .button {
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button-primary {
+      background: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .button-secondary {
+      background: #232835;
+      color: var(--text);
+      border: 1px solid #30384a;
+    }
+
+    .button-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .button-warning {
+      background: var(--warning);
+      color: #181818;
+    }
+
+    .button-success {
+      background: var(--success);
+      color: #08140c;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr 1fr auto;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      font-size: 36px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .page-note {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(23, 26, 33, 0.96);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card h2 {
+      font-size: 20px;
+      margin: 0 0 14px 0;
+    }
+
+    .mini {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: -4px;
+      margin-bottom: 12px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .row > * {
+      flex: 1 1 0;
+      min-width: 130px;
+    }
+
+    .kv {
+      display: grid;
+      gap: 12px;
+    }
+
+    .kv-item {
+      background: #11141a;
+      border: 1px solid #252c39;
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .kv-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .kv-value {
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .status-box {
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid transparent;
+    }
+
+    .status-idle {
+      background: #11141a;
+      border-color: #252c39;
+      color: var(--muted);
+    }
+
+    .status-ok {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #b6f3c8;
+    }
+
+    .status-error {
+      background: rgba(229, 72, 77, 0.12);
+      border-color: rgba(229, 72, 77, 0.35);
+      color: #ffc7c9;
+    }
+
+    .status-warn {
+      background: rgba(245, 165, 36, 0.12);
+      border-color: rgba(245, 165, 36, 0.35);
+      color: #ffe3a6;
+    }
+
+    .devices-list,
+    .subs-list {
+      display: grid;
+      gap: 10px;
+      max-height: 330px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .item {
+      background: #11141a;
+      border: 1px solid #252c39;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .item-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .item-sub {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .badge-standard {
+      background: rgba(245, 165, 36, 0.14);
+      border-color: rgba(245, 165, 36, 0.28);
+      color: #ffd47f;
+    }
+
+    .badge-premium {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.18);
+      color: white;
+    }
+
+    .badge-none {
+      background: rgba(229, 72, 77, 0.12);
+      border-color: rgba(229, 72, 77, 0.28);
+      color: #ffb6b8;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 980px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 30px;
+      }
+
+      .login-card {
+        padding: 24px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>LynkStore Admin</h1>
-      <div class="muted">Выдача подписок Standard и Premium</div>
+  <div class="app">
+    <div id="loginScreen" class="login-screen">
+      <div class="login-card">
+        <div class="brand">LynkStore Admin</div>
+        <h1 class="title">Вход в админку</h1>
+        <div class="subtitle">
+          Введите пароль администратора, чтобы открыть панель выдачи подписок.
+        </div>
+        <div class="stack">
+          <input id="adminPassword" class="input" type="password" placeholder="Пароль администратора" />
+          <button id="loginBtn" class="button button-primary">ВОЙТИ</button>
+          <div id="loginStatus" class="status-box status-idle">Ожидание ввода пароля</div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Настройки подключения</h2>
+    <div id="adminScreen" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="brand">LynkStore Admin</div>
+          <h1 class="page-title">Управление подписками</h1>
+          <div class="page-note">Выдача Standard / Premium, сброс машин и полное обнуление аккаунта.</div>
+        </div>
+        <div class="row" style="max-width: 280px; width: 100%;">
+          <button id="logoutBtn" class="button button-secondary">ВЫЙТИ</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Настройки подключения</h2>
+        <div class="mini">Сохраняются в браузере на этом устройстве.</div>
+        <div class="config-grid">
+          <input id="supabaseUrl" class="input" placeholder="Supabase URL" />
+          <input id="supabaseKey" class="input" placeholder="Supabase Publishable Key" />
+        </div>
+        <div class="row">
+          <button id="saveConfigBtn" class="button button-primary">СОХРАНИТЬ НАСТРОЙКИ</button>
+          <button id="testConfigBtn" class="button button-secondary">ПРОВЕРИТЬ ПОДКЛЮЧЕНИЕ</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="userLogin" class="input" placeholder="Логин пользователя" />
+        <button id="findUserBtn" class="button button-primary">НАЙТИ ПОЛЬЗОВАТЕЛЯ</button>
+        <button id="refreshUserBtn" class="button button-secondary">ОБНОВИТЬ</button>
+        <button id="clearViewBtn" class="button button-secondary">ОЧИСТИТЬ</button>
+      </div>
+
       <div class="grid">
-        <input id="url" placeholder="Supabase URL" />
-        <input id="key" placeholder="Supabase Publishable Key" />
-      </div>
-      <div style="height:10px"></div>
-      <button onclick="saveConfig()">Сохранить настройки</button>
-    </div>
+        <div class="stack">
+          <div class="card">
+            <h2>Пользователь</h2>
+            <div id="userCard" class="kv">
+              <div class="kv-item">
+                <div class="kv-label">Статус</div>
+                <div class="kv-value">Пользователь не загружен</div>
+              </div>
+            </div>
+          </div>
 
-    <div class="card">
-      <h2>Поиск пользователя</h2>
-      <div class="row">
-        <input id="login" placeholder="Логин пользователя" />
-        <button onclick="loadUser()">Найти</button>
-      </div>
-      <div style="height:14px"></div>
-      <pre id="userInfo">Пользователь не загружен</pre>
-    </div>
+          <div class="card">
+            <h2>Подписки</h2>
+            <div class="mini">Последняя активная запись и история, если они есть.</div>
+            <div id="subsList" class="subs-list">
+              <div class="item">
+                <div class="item-title">Нет данных</div>
+                <div class="item-sub">Сначала найди пользователя.</div>
+              </div>
+            </div>
+          </div>
 
-    <div class="card">
-      <h2>Выдать подписку</h2>
-      <div class="row">
-        <button onclick="issuePlan('standard')">Standard</button>
-        <button onclick="issuePlan('premium')">Premium</button>
-      </div>
-    </div>
+          <div class="card">
+            <h2>Машины</h2>
+            <div class="mini">Все привязанные устройства пользователя.</div>
+            <div id="devicesList" class="devices-list">
+              <div class="item">
+                <div class="item-title">Нет данных</div>
+                <div class="item-sub">Сначала найди пользователя.</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <div class="card">
-      <h2>Управление устройствами</h2>
-      <div class="row">
-        <button class="secondary" onclick="resetDevices()">Сбросить машины</button>
-      </div>
-    </div>
+        <div class="stack">
+          <div class="card">
+            <h2>Действия</h2>
+            <div class="mini">Все операции выполняются сразу после подтверждения.</div>
+            <div class="stack">
+              <button id="issueStandardBtn" class="button button-warning">ВЫДАТЬ STANDARD</button>
+              <button id="issuePremiumBtn" class="button button-primary">ВЫДАТЬ PREMIUM</button>
+              <button id="resetDevicesBtn" class="button button-secondary">СБРОСИТЬ МАШИНЫ</button>
+              <button id="resetAccountBtn" class="button button-danger">ОБНУЛИТЬ АККАУНТ</button>
+            </div>
+          </div>
 
-    <div class="card">
-      <h2>Результат</h2>
-      <pre id="result">Ожидание действий</pre>
+          <div class="card">
+            <h2>Результат</h2>
+            <div id="resultBox" class="status-box status-idle">Ожидание действий</div>
+          </div>
+
+          <div class="card">
+            <h2>Памятка</h2>
+            <div class="stack">
+              <div class="item">
+                <div class="item-title">Standard</div>
+                <div class="item-sub">30 дней, до 3 машин, доступ только к ограниченному списку приложений.</div>
+              </div>
+              <div class="item">
+                <div class="item-title">Premium</div>
+                <div class="item-sub">Без срока, без лимита по машинам, полный доступ ко всем приложениям.</div>
+              </div>
+              <div class="item">
+                <div class="item-title">Обнулить аккаунт</div>
+                <div class="item-sub">Удаляет подписки и машины. Аккаунт пользователя остаётся, но без доступа.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">LynkStore Admin Panel</div>
     </div>
   </div>
 
   <script>
-    function qs(id) { return document.getElementById(id); }
+    const ADMIN_PASSWORD = "Lynk800rus74";
+    const STORAGE_KEYS = {
+      url: "lynk_admin_supabase_url",
+      key: "lynk_admin_supabase_key",
+      auth: "lynk_admin_auth_ok"
+    };
 
-    function saveConfig() {
-      localStorage.setItem("ls_url", qs("url").value.trim());
-      localStorage.setItem("ls_key", qs("key").value.trim());
-      qs("result").textContent = "Настройки сохранены";
+    let currentUser = null;
+    let currentSubscriptions = [];
+    let currentDevices = [];
+
+    function qs(id) {
+      return document.getElementById(id);
     }
 
-    function loadConfig() {
-      qs("url").value = localStorage.getItem("ls_url") || "";
-      qs("key").value = localStorage.getItem("ls_key") || "";
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setStatus(text, mode = "idle") {
+      const box = qs("resultBox");
+      box.className = "status-box";
+      if (mode === "ok") box.classList.add("status-ok");
+      else if (mode === "error") box.classList.add("status-error");
+      else if (mode === "warn") box.classList.add("status-warn");
+      else box.classList.add("status-idle");
+      box.textContent = text;
+    }
+
+    function setLoginStatus(text, mode = "idle") {
+      const box = qs("loginStatus");
+      box.className = "status-box";
+      if (mode === "ok") box.classList.add("status-ok");
+      else if (mode === "error") box.classList.add("status-error");
+      else box.classList.add("status-idle");
+      box.textContent = text;
     }
 
     function headers() {
-      const key = qs("key").value.trim();
+      const key = qs("supabaseKey").value.trim();
       return {
         "apikey": key,
         "Authorization": "Bearer " + key,
@@ -92,10 +557,39 @@
     }
 
     function baseUrl() {
-      return qs("url").value.trim();
+      return qs("supabaseUrl").value.trim();
     }
 
-    let currentUser = null;
+    function saveConfig() {
+      localStorage.setItem(STORAGE_KEYS.url, qs("supabaseUrl").value.trim());
+      localStorage.setItem(STORAGE_KEYS.key, qs("supabaseKey").value.trim());
+      setStatus("Настройки сохранены.", "ok");
+    }
+
+    function loadConfig() {
+      qs("supabaseUrl").value = localStorage.getItem(STORAGE_KEYS.url) || "https://mhizpmtvcrdmskstjyhr.supabase.co";
+      qs("supabaseKey").value = localStorage.getItem(STORAGE_KEYS.key) || "";
+    }
+
+    function showAdmin() {
+      qs("loginScreen").classList.add("hidden");
+      qs("adminScreen").classList.remove("hidden");
+      localStorage.setItem(STORAGE_KEYS.auth, "1");
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem(STORAGE_KEYS.auth);
+      qs("adminScreen").classList.add("hidden");
+      qs("loginScreen").classList.remove("hidden");
+      qs("adminPassword").value = "";
+      setLoginStatus("Выход выполнен.", "ok");
+    }
+
+    function tryAutoAuth() {
+      if (localStorage.getItem(STORAGE_KEYS.auth) === "1") {
+        showAdmin();
+      }
+    }
 
     async function apiGet(path, params = "") {
       const res = await fetch(baseUrl() + path + params, {
@@ -127,83 +621,319 @@
       return true;
     }
 
+    async function testConnection() {
+      try {
+        setStatus("Проверка подключения...", "idle");
+        await apiGet("/rest/v1/users", "?select=id&limit=1");
+        setStatus("Подключение к Supabase успешно.", "ok");
+      } catch (e) {
+        setStatus("Ошибка подключения:\n" + e.message, "error");
+      }
+    }
+
+    function renderUser() {
+      const wrap = qs("userCard");
+
+      if (!currentUser) {
+        wrap.innerHTML = `
+          <div class="kv-item">
+            <div class="kv-label">Статус</div>
+            <div class="kv-value">Пользователь не загружен</div>
+          </div>
+        `;
+        return;
+      }
+
+      const latestSub = currentSubscriptions.length ? currentSubscriptions[0] : null;
+      let badgeClass = "badge-none";
+      let badgeText = "Нет подписки";
+
+      if (latestSub) {
+        const plan = String(latestSub.plan || "").toLowerCase();
+        if (plan === "standard") {
+          badgeClass = "badge-standard";
+          badgeText = "Standard";
+        } else if (plan === "premium") {
+          badgeClass = "badge-premium";
+          badgeText = "Premium";
+        }
+      }
+
+      wrap.innerHTML = `
+        <div class="kv-item">
+          <div class="kv-label">Логин</div>
+          <div class="kv-value">${escapeHtml(currentUser.login)}</div>
+        </div>
+        <div class="kv-item">
+          <div class="kv-label">ID пользователя</div>
+          <div class="kv-value">${escapeHtml(currentUser.id)}</div>
+        </div>
+        <div class="kv-item">
+          <div class="kv-label">Текущий статус</div>
+          <div class="kv-value"><span class="badge ${badgeClass}">${badgeText}</span></div>
+        </div>
+        <div class="kv-item">
+          <div class="kv-label">Количество машин</div>
+          <div class="kv-value">${currentDevices.length}</div>
+        </div>
+      `;
+    }
+
+    function renderSubscriptions() {
+      const wrap = qs("subsList");
+
+      if (!currentUser) {
+        wrap.innerHTML = `
+          <div class="item">
+            <div class="item-title">Нет данных</div>
+            <div class="item-sub">Сначала найди пользователя.</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (!currentSubscriptions.length) {
+        wrap.innerHTML = `
+          <div class="item">
+            <div class="item-title">Подписок нет</div>
+            <div class="item-sub">У пользователя пока нет активных или прошлых подписок.</div>
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = currentSubscriptions.map(sub => {
+        const plan = String(sub.plan || "").toLowerCase();
+        const badgeClass = plan === "premium" ? "badge-premium" : "badge-standard";
+        const badgeText = plan === "premium" ? "Premium" : "Standard";
+        const expires = sub.expires_at ? sub.expires_at : "Без срока";
+        const maxDevices = sub.max_devices ?? "—";
+        return `
+          <div class="item">
+            <div class="item-title">
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="item-sub">
+              ID: ${escapeHtml(sub.id)}<br>
+              Истекает: ${escapeHtml(expires)}<br>
+              Лимит машин: ${escapeHtml(maxDevices)}<br>
+              Создано: ${escapeHtml(sub.created_at || "—")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDevices() {
+      const wrap = qs("devicesList");
+
+      if (!currentUser) {
+        wrap.innerHTML = `
+          <div class="item">
+            <div class="item-title">Нет данных</div>
+            <div class="item-sub">Сначала найди пользователя.</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (!currentDevices.length) {
+        wrap.innerHTML = `
+          <div class="item">
+            <div class="item-title">Машины не привязаны</div>
+            <div class="item-sub">У этого пользователя пока нет зарегистрированных устройств.</div>
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = currentDevices.map(dev => `
+        <div class="item">
+          <div class="item-title">${escapeHtml(dev.device_code || "Без кода")}</div>
+          <div class="item-sub">
+            ID: ${escapeHtml(dev.id)}<br>
+            Создано: ${escapeHtml(dev.created_at || "—")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function clearCurrentView() {
+      currentUser = null;
+      currentSubscriptions = [];
+      currentDevices = [];
+      renderUser();
+      renderSubscriptions();
+      renderDevices();
+      qs("userLogin").value = "";
+      setStatus("Экран очищен.", "idle");
+    }
+
     async function loadUser() {
       try {
-        const login = qs("login").value.trim();
-        if (!login) throw new Error("Введите логин");
+        const login = qs("userLogin").value.trim();
+        if (!login) throw new Error("Введите логин пользователя.");
+
+        setStatus("Поиск пользователя...", "idle");
 
         const users = await apiGet("/rest/v1/users", `?select=*&login=eq.${encodeURIComponent(login)}&limit=1`);
         if (!users.length) {
           currentUser = null;
-          qs("userInfo").textContent = "Пользователь не найден";
-          qs("result").textContent = "Пользователь не найден";
+          currentSubscriptions = [];
+          currentDevices = [];
+          renderUser();
+          renderSubscriptions();
+          renderDevices();
+          setStatus("Пользователь не найден.", "warn");
           return;
         }
 
         currentUser = users[0];
 
-        const subs = await apiGet("/rest/v1/subscriptions", `?select=*&user_id=eq.${currentUser.id}&order=created_at.desc&limit=1`);
-        const devices = await apiGet("/rest/v1/devices", `?select=*&user_id=eq.${currentUser.id}&order=created_at.asc`);
+        currentSubscriptions = await apiGet(
+          "/rest/v1/subscriptions",
+          `?select=*&user_id=eq.${currentUser.id}&order=created_at.desc`
+        );
 
-        qs("userInfo").textContent = JSON.stringify({
-          user: currentUser,
-          subscription: subs[0] || null,
-          devices: devices
-        }, null, 2);
+        currentDevices = await apiGet(
+          "/rest/v1/devices",
+          `?select=*&user_id=eq.${currentUser.id}&order=created_at.asc`
+        );
 
-        qs("result").textContent = "Пользователь загружен";
+        renderUser();
+        renderSubscriptions();
+        renderDevices();
+        setStatus("Пользователь успешно загружен.", "ok");
       } catch (e) {
-        qs("result").textContent = "Ошибка: " + e.message;
+        setStatus("Ошибка загрузки пользователя:\n" + e.message, "error");
       }
     }
 
-    function planPayload(plan, userId) {
+    function buildSubscriptionPayload(plan, userId) {
       const now = new Date();
-      let expiresAt = null;
-      let maxDevices = null;
 
       if (plan === "standard") {
-        expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        maxDevices = 3;
-      } else if (plan === "premium") {
-        expiresAt = null;
-        maxDevices = 999;
+        const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        return {
+          user_id: userId,
+          plan: "standard",
+          expires_at: expires,
+          max_devices: 3
+        };
       }
 
       return {
         user_id: userId,
-        plan: plan,
-        expires_at: expiresAt,
-        max_devices: maxDevices
+        plan: "premium",
+        expires_at: null,
+        max_devices: 999
       };
     }
 
     async function issuePlan(plan) {
       try {
-        if (!currentUser) throw new Error("Сначала загрузите пользователя");
+        if (!currentUser) throw new Error("Сначала загрузите пользователя.");
 
-        const payload = planPayload(plan, currentUser.id);
-        const data = await apiPost("/rest/v1/subscriptions", payload);
+        const planTitle = plan === "premium" ? "Premium" : "Standard";
+        const confirmed = confirm(`Выдать пользователю ${currentUser.login} подписку ${planTitle}?`);
+        if (!confirmed) return;
 
-        qs("result").textContent = "Подписка выдана:\n" + JSON.stringify(data[0] || data, null, 2);
+        setStatus(`Выдача подписки ${planTitle}...`, "idle");
+
+        const payload = buildSubscriptionPayload(plan, currentUser.id);
+        await apiPost("/rest/v1/subscriptions", payload);
+
         await loadUser();
+        setStatus(`Подписка ${planTitle} успешно выдана пользователю ${currentUser.login}.`, "ok");
       } catch (e) {
-        qs("result").textContent = "Ошибка: " + e.message;
+        setStatus("Ошибка выдачи подписки:\n" + e.message, "error");
       }
     }
 
     async function resetDevices() {
       try {
-        if (!currentUser) throw new Error("Сначала загрузите пользователя");
+        if (!currentUser) throw new Error("Сначала загрузите пользователя.");
+
+        const confirmed = confirm(`Сбросить все машины пользователя ${currentUser.login}?`);
+        if (!confirmed) return;
+
+        setStatus("Удаление машин...", "idle");
+
         await apiDelete("/rest/v1/devices", `?user_id=eq.${currentUser.id}`);
-        qs("result").textContent = "Машины пользователя сброшены";
+
         await loadUser();
+        setStatus(`Все машины пользователя ${currentUser.login} удалены.`, "ok");
       } catch (e) {
-        qs("result").textContent = "Ошибка: " + e.message;
+        setStatus("Ошибка сброса машин:\n" + e.message, "error");
       }
     }
 
-    loadConfig();
+    async function resetAccount() {
+      try {
+        if (!currentUser) throw new Error("Сначала загрузите пользователя.");
+
+        const confirmed = confirm(
+          `ОБНУЛИТЬ аккаунт ${currentUser.login}?\n\n` +
+          `Будут удалены:\n` +
+          `- все подписки\n` +
+          `- все машины\n\n` +
+          `Сам аккаунт останется.`
+        );
+        if (!confirmed) return;
+
+        setStatus("Обнуление аккаунта...", "idle");
+
+        await apiDelete("/rest/v1/subscriptions", `?user_id=eq.${currentUser.id}`);
+        await apiDelete("/rest/v1/devices", `?user_id=eq.${currentUser.id}`);
+
+        await loadUser();
+        setStatus(`Аккаунт ${currentUser.login} обнулён: подписки и машины удалены.`, "ok");
+      } catch (e) {
+        setStatus("Ошибка обнуления аккаунта:\n" + e.message, "error");
+      }
+    }
+
+    function bindEvents() {
+      qs("loginBtn").addEventListener("click", () => {
+        const value = qs("adminPassword").value;
+        if (value !== ADMIN_PASSWORD) {
+          setLoginStatus("Неверный пароль.", "error");
+          return;
+        }
+        setLoginStatus("Вход выполнен.", "ok");
+        showAdmin();
+      });
+
+      qs("adminPassword").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") qs("loginBtn").click();
+      });
+
+      qs("logoutBtn").addEventListener("click", logoutAdmin);
+      qs("saveConfigBtn").addEventListener("click", saveConfig);
+      qs("testConfigBtn").addEventListener("click", testConnection);
+      qs("findUserBtn").addEventListener("click", loadUser);
+      qs("refreshUserBtn").addEventListener("click", loadUser);
+      qs("clearViewBtn").addEventListener("click", clearCurrentView);
+      qs("issueStandardBtn").addEventListener("click", () => issuePlan("standard"));
+      qs("issuePremiumBtn").addEventListener("click", () => issuePlan("premium"));
+      qs("resetDevicesBtn").addEventListener("click", resetDevices);
+      qs("resetAccountBtn").addEventListener("click", resetAccount);
+
+      qs("userLogin").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") loadUser();
+      });
+    }
+
+    function init() {
+      loadConfig();
+      bindEvents();
+      renderUser();
+      renderSubscriptions();
+      renderDevices();
+      tryAutoAuth();
+    }
+
+    init();
   </script>
 </body>
 </html>
